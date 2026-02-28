@@ -17,13 +17,15 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 interface FplFixture {
   id: number;
   event: number | null;
-  team_h: number;
-  team_a: number;
+  team_h_id: number;
+  team_a_id: number;
   team_h_score: number | null;
   team_a_score: number | null;
   kickoff_time: string | null;
   finished: boolean;
   started: boolean;
+  team_h_short_name?: string;
+  team_a_short_name?: string;
   [key: string]: unknown;
 }
 
@@ -36,16 +38,54 @@ export function FixturesTab() {
     async function fetchFixtures() {
       setLoading(true);
       setError(null);
-      const { data, error: err } = await supabaseBrowser
+      
+      // fetch fixtures with just the needed ids/scores
+      const { data: fixturesData, error: fixturesError } = await supabaseBrowser
         .from("fpl_fixtures")
-        .select("*")
+        .select(`
+          id,
+          event_id,
+          team_h_id,
+          team_a_id,
+          team_h_score,
+          team_a_score,
+          kickoff_time,
+          finished,
+          started
+        `)
         .order("kickoff_time", { ascending: true });
 
-      if (err) {
-        setError(err.message);
-      } else {
-        setFixtures((data as FplFixture[]) ?? []);
+      if (fixturesError) {
+        setError(fixturesError.message);
+        setLoading(false);
+        return;
       }
+
+      const { data: teamsData, error: teamsError } = await supabaseBrowser
+        .from("fpl_teams")
+        .select("id, short_name");
+
+      if (teamsError) {
+        setError(teamsError.message);
+        setLoading(false);
+        return;
+      }
+
+      const teamMap: Record<number, string> = {};
+      if (teamsData) {
+        teamsData.forEach((team: any) => {
+          teamMap[team.id] = team.short_name;
+        });
+      }
+
+      const enriched = (fixturesData as any[]).map((f) => ({
+        ...f,
+        event: f.event_id,
+        team_h_short_name: teamMap[f.team_h_id] || `Team ${f.team_h_id}`,
+        team_a_short_name: teamMap[f.team_a_id] || `Team ${f.team_a_id}`,
+      }));
+
+      setFixtures(enriched);
       setLoading(false);
     }
     fetchFixtures();
@@ -85,7 +125,7 @@ export function FixturesTab() {
                 {f.event ?? "-"}
               </TableCell>
               <TableCell className="text-right font-mono font-medium">
-                {f.team_h}
+                {f.team_h_short_name || f.team_h_id}
               </TableCell>
               <TableCell className="text-center font-mono">
                 {f.team_h_score !== null && f.team_a_score !== null
@@ -93,7 +133,7 @@ export function FixturesTab() {
                   : "- - -"}
               </TableCell>
               <TableCell className="font-mono font-medium">
-                {f.team_a}
+                {f.team_a_short_name || f.team_a_id}
               </TableCell>
               <TableCell className="text-muted-foreground">
                 {f.kickoff_time
