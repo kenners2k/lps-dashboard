@@ -18,13 +18,6 @@ interface FplTeam {
   id: number;
   name: string;
   short_name: string;
-  strength: number;
-  strength_overall_home: number;
-  strength_overall_away: number;
-  strength_attack_home: number;
-  strength_attack_away: number;
-  strength_defence_home: number;
-  strength_defence_away: number;
   [key: string]: unknown;
 }
 
@@ -70,11 +63,6 @@ export function TeamsTab() {
             <TableHead className="w-12">ID</TableHead>
             <TableHead>Team</TableHead>
             <TableHead className="w-16 text-center">Code</TableHead>
-            <TableHead className="text-center">Strength</TableHead>
-            <TableHead className="text-right">ATK&nbsp;H</TableHead>
-            <TableHead className="text-right">ATK&nbsp;A</TableHead>
-            <TableHead className="text-right">DEF&nbsp;H</TableHead>
-            <TableHead className="text-right">DEF&nbsp;A</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -86,21 +74,6 @@ export function TeamsTab() {
               <TableCell className="font-medium">{t.name}</TableCell>
               <TableCell className="text-center">
                 <Badge variant="outline">{t.short_name}</Badge>
-              </TableCell>
-              <TableCell className="text-center font-mono">
-                {t.strength}
-              </TableCell>
-              <TableCell className="text-right font-mono">
-                {t.strength_attack_home}
-              </TableCell>
-              <TableCell className="text-right font-mono">
-                {t.strength_attack_away}
-              </TableCell>
-              <TableCell className="text-right font-mono">
-                {t.strength_defence_home}
-              </TableCell>
-              <TableCell className="text-right font-mono">
-                {t.strength_defence_away}
               </TableCell>
             </TableRow>
           ))}
